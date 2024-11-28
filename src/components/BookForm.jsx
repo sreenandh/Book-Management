@@ -1,83 +1,82 @@
-import React from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { deleteBook } from '../redux/bookSlice';
-import { Link } from 'react-router-dom';
-import { Container, Table, Button, Row, Col, Card } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { addBook, updateBook } from '../redux/bookSlice';
+import { Form, Button, Container } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 
-const BookList = () => {
-  const books = useSelector(state => state.books.bookList);
+const BookForm = ({ book = null }) => {
+  const [title, setTitle] = useState('');
+  const [author, setAuthor] = useState('');
+  const [genre, setGenre] = useState('');
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this book?')) {
-      dispatch(deleteBook(id));
+  useEffect(() => {
+    if (book) {
+      setTitle(book.title);
+      setAuthor(book.author);
+      setGenre(book.genre);
     }
+  }, [book]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    const bookData = { title, author, genre };
+    
+    if (book) {
+      // Update existing book
+      dispatch(updateBook({ ...bookData, id: book.id }));
+    } else {
+      // Add new book
+      dispatch(addBook(bookData));
+    }
+    
+    navigate('/');
   };
 
   return (
-    <Container fluid>
-      <Row className="justify-content-center">
-        <Col xs={12}>
-          <Card className="shadow-sm">
-            <Card.Header>
-              <h2 className="my-2 text-center">Book Collection</h2>
-            </Card.Header>
-            <Card.Body>
-              {books.length === 0 ? (
-                <p className="text-center text-muted">
-                  No books in the collection. Add a book to get started!
-                </p>
-              ) : (
-                <div className="table-responsive">
-                  <Table striped bordered hover>
-                    <thead>
-                      <tr>
-                        <th>Title</th>
-                        <th>Author</th>
-                        <th>Genre</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {books.map(book => (
-                        <tr key={book.id}>
-                          <td>{book.title}</td>
-                          <td>{book.author}</td>
-                          <td>{book.genre}</td>
-                          <td>
-                            <div className="d-flex gap-2">
-                              <Link 
-                                to={`/edit/${book.id}`} 
-                                className="btn btn-sm btn-warning"
-                              >
-                                Edit
-                              </Link>
-                              <Button 
-                                variant="danger" 
-                                size="sm" 
-                                onClick={() => handleDelete(book.id)}
-                              >
-                                Delete
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </Table>
-                </div>
-              )}
-              <div className="text-center mt-3">
-                <Link to="/add" className="btn btn-success">
-                  Add New Book
-                </Link>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+    <Container className="mt-4">
+      <Form onSubmit={handleSubmit}>
+        <Form.Group className="mb-3">
+          <Form.Label>Title</Form.Label>
+          <Form.Control 
+            type="text" 
+            placeholder="Enter book title" 
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+          />
+        </Form.Group>
+
+        <Form.Group className="mb-3">
+          <Form.Label>Author</Form.Label>
+          <Form.Control 
+            type="text" 
+            placeholder="Enter author name" 
+            value={author}
+            onChange={(e) => setAuthor(e.target.value)}
+            required
+          />
+        </Form.Group>
+
+        <Form.Group className="mb-3">
+          <Form.Label>Genre</Form.Label>
+          <Form.Control 
+            type="text" 
+            placeholder="Enter book genre" 
+            value={genre}
+            onChange={(e) => setGenre(e.target.value)}
+            required
+          />
+        </Form.Group>
+
+        <Button variant="primary" type="submit">
+          {book ? 'Update Book' : 'Add Book'}
+        </Button>
+      </Form>
     </Container>
   );
 };
 
-export default BookList;
+export default BookForm;
